@@ -44,6 +44,10 @@ public:
     // Cambia el peso de una arista existente. Devuelve false si no existe.
     bool fijarPeso(const std::string &idOrigen, const std::string &idDestino, double peso);
 
+    // Suma incremento al peso de la arista; si no existe, la crea con ese peso.
+    // Devuelve false si algun nodo no existe.
+    bool aumentarPeso(const std::string &idOrigen, const std::string &idDestino, double incremento = 1.0);
+
     bool esDireccionado() const;
     bool esPonderado() const;
 

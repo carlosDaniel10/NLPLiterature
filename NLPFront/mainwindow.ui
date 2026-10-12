@@ -25,6 +25,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="botonVerGrafo">
+        <property name="text">
+         <string>Ver grafo</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="espaciadorBotones">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -40,14 +47,32 @@
      </layout>
     </item>
     <item>
-     <widget class="QPlainTextEdit" name="visorTexto">
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-      <property name="placeholderText">
-       <string>El texto del archivo se mostrara aqui</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="layoutContenido" stretch="1,0">
+      <item>
+       <widget class="QPlainTextEdit" name="visorTexto">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="placeholderText">
+         <string>El texto del archivo se mostrara aqui</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="layoutPersonajes">
+        <item>
+         <widget class="QLabel" name="etiquetaPersonajes">
+          <property name="text">
+           <string>Personajes</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="listaPersonajes"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

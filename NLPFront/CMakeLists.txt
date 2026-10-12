@@ -27,6 +27,8 @@ set(PROJECT_SOURCES
         arista.h
         grafo.cpp
         grafo.h
+        dialogografo.cpp
+        dialogografo.h
         ${TS_FILES}
 )
 

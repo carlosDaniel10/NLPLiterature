@@ -191,6 +191,22 @@ bool Grafo::fijarPeso(const std::string &idOrigen, const std::string &idDestino,
     return true;
 }
 
+bool Grafo::aumentarPeso(const std::string &idOrigen, const std::string &idDestino, double incremento)
+{
+    if (!existeNodo(idOrigen) || !existeNodo(idDestino))
+    {
+        return false;
+    }
+
+    if (existeArista(idOrigen, idDestino))
+    {
+        const double pesoActual = obtenerPeso(idOrigen, idDestino);
+        return fijarPeso(idOrigen, idDestino, pesoActual + incremento);
+    }
+
+    return agregarArista(Arista(idOrigen, idDestino, incremento));
+}
+
 bool Grafo::esDireccionado() const
 {
     return direccionado;
