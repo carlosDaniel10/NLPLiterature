@@ -1,18 +1,21 @@
 #include "dialogografo.h"
 
 #include <QBrush>
+#include <QEvent>
 #include <QFont>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsLineItem>
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 #include <QGraphicsView>
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QPen>
-#include <QResizeEvent>
+#include <QPushButton>
 #include <QShowEvent>
 #include <QSize>
 #include <QVBoxLayout>
+#include <QWheelEvent>
 
 #include <cmath>
 #include <string>
@@ -31,8 +34,24 @@ DialogoGrafo::DialogoGrafo(QWidget *parent)
     vista->setRenderHint(QPainter::Antialiasing);
     vista->setDragMode(QGraphicsView::ScrollHandDrag);
     vista->setMinimumSize(200, 150);
+    vista->viewport()->installEventFilter(this);
+
+    QPushButton *botonAcercar = new QPushButton(tr("Acercar"), this);
+    QPushButton *botonAlejar = new QPushButton(tr("Alejar"), this);
+    QPushButton *botonAjustar = new QPushButton(tr("Ajustar"), this);
+
+    connect(botonAcercar, &QPushButton::clicked, this, &DialogoGrafo::acercar);
+    connect(botonAlejar, &QPushButton::clicked, this, &DialogoGrafo::alejar);
+    connect(botonAjustar, &QPushButton::clicked, this, &DialogoGrafo::ajustarVista);
+
+    QHBoxLayout *filaBotones = new QHBoxLayout();
+    filaBotones->addWidget(botonAcercar);
+    filaBotones->addWidget(botonAlejar);
+    filaBotones->addWidget(botonAjustar);
+    filaBotones->addStretch();
 
     QVBoxLayout *disposicion = new QVBoxLayout(this);
+    disposicion->addLayout(filaBotones);
     disposicion->addWidget(vista);
 }
 
@@ -146,14 +165,34 @@ void DialogoGrafo::ajustarVista()
     vista->fitInView(escena->sceneRect(), Qt::KeepAspectRatio);
 }
 
+void DialogoGrafo::acercar()
+{
+    vista->scale(1.25, 1.25);
+}
+
+void DialogoGrafo::alejar()
+{
+    vista->scale(0.8, 0.8);
+}
+
+bool DialogoGrafo::eventFilter(QObject *objeto, QEvent *evento)
+{
+    if (objeto == vista->viewport() && evento->type() == QEvent::Wheel)
+    {
+        const QWheelEvent *rueda = static_cast<const QWheelEvent *>(evento);
+        const double factor = rueda->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
+
+        vista->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+        vista->scale(factor, factor);
+        vista->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+        return true;
+    }
+
+    return QDialog::eventFilter(objeto, evento);
+}
+
 void DialogoGrafo::showEvent(QShowEvent *evento)
 {
     QDialog::showEvent(evento);
-    ajustarVista();
-}
-
-void DialogoGrafo::resizeEvent(QResizeEvent *evento)
-{
-    QDialog::resizeEvent(evento);
     ajustarVista();
 }
