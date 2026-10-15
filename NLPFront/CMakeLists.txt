@@ -29,6 +29,10 @@ set(PROJECT_SOURCES
         grafo.h
         dialogografo.cpp
         dialogografo.h
+        analizadorsentimientos.cpp
+        analizadorsentimientos.h
+        sentimientos_es.txt
+        lexico.qrc
         ${TS_FILES}
 )
 

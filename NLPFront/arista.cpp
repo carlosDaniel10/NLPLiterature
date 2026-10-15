@@ -4,6 +4,8 @@ Arista::Arista()
     : idOrigen()
     , idDestino()
     , peso(1.0)
+    , sumaSentimiento(0.0)
+    , cantidadSentimientos(0)
 {
 }
 
@@ -11,6 +13,8 @@ Arista::Arista(const std::string &idOrigen, const std::string &idDestino, double
     : idOrigen(idOrigen)
     , idDestino(idDestino)
     , peso(peso)
+    , sumaSentimiento(0.0)
+    , cantidadSentimientos(0)
 {
 }
 
@@ -42,6 +46,22 @@ double Arista::obtenerPeso() const
 void Arista::fijarPeso(double peso)
 {
     this->peso = peso;
+}
+
+double Arista::obtenerSentimiento() const
+{
+    if (cantidadSentimientos == 0)
+    {
+        return 0.0;
+    }
+
+    return sumaSentimiento / cantidadSentimientos;
+}
+
+void Arista::agregarSentimiento(double puntaje)
+{
+    sumaSentimiento += puntaje;
+    ++cantidadSentimientos;
 }
 
 bool Arista::operator==(const Arista &otra) const

@@ -207,6 +207,35 @@ bool Grafo::aumentarPeso(const std::string &idOrigen, const std::string &idDesti
     return agregarArista(Arista(idOrigen, idDestino, incremento));
 }
 
+bool Grafo::registrarSentimiento(const std::string &idOrigen, const std::string &idDestino, double puntaje)
+{
+    if (!existeArista(idOrigen, idDestino))
+    {
+        return false;
+    }
+
+    for (Arista &arista : aristas.at(idOrigen))
+    {
+        if (arista.obtenerIdDestino() == idDestino)
+        {
+            arista.agregarSentimiento(puntaje);
+        }
+    }
+
+    if (!direccionado && idOrigen != idDestino)
+    {
+        for (Arista &arista : aristas.at(idDestino))
+        {
+            if (arista.obtenerIdDestino() == idOrigen)
+            {
+                arista.agregarSentimiento(puntaje);
+            }
+        }
+    }
+
+    return true;
+}
+
 bool Grafo::esDireccionado() const
 {
     return direccionado;

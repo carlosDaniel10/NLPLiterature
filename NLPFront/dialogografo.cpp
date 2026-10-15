@@ -108,8 +108,27 @@ void DialogoGrafo::mostrarGrafo(const Grafo &grafo)
         }
 
         const double proporcion = arista.obtenerPeso() / pesoMaximo;
-        const int tono = 215 - static_cast<int>(175.0 * proporcion);
-        QPen lapiz(QColor(tono, tono, tono));
+        const double sentimiento = arista.obtenerSentimiento();
+        QColor color(160, 160, 160);
+
+        if (sentimiento > 0.0)
+        {
+            const double t = qMin(1.0, sentimiento);
+            color = QColor(
+                160 + static_cast<int>((30 - 160) * t),
+                160 + static_cast<int>((170 - 160) * t),
+                160 + static_cast<int>((60 - 160) * t));
+        }
+        else if (sentimiento < 0.0)
+        {
+            const double t = qMin(1.0, -sentimiento);
+            color = QColor(
+                160 + static_cast<int>((220 - 160) * t),
+                160 + static_cast<int>((60 - 160) * t),
+                160 + static_cast<int>((60 - 160) * t));
+        }
+
+        QPen lapiz(color);
         lapiz.setWidthF(1.0 + 6.0 * proporcion);
 
         escena->addLine(QLineF(itOrigen->second, itDestino->second), lapiz);
@@ -145,6 +164,13 @@ void DialogoGrafo::mostrarGrafo(const Grafo &grafo)
     }
 
     escena->setSceneRect(escena->itemsBoundingRect().adjusted(-40.0, -40.0, 40.0, 40.0));
+
+    QGraphicsSimpleTextItem *leyenda = escena->addSimpleText(
+        tr("Verde = positivo, rojo = negativo"));
+    leyenda->setPos(escena->sceneRect().topLeft() + QPointF(10.0, 10.0));
+    leyenda->setBrush(QColor(80, 80, 80));
+    leyenda->setZValue(2.0);
+
     ajustarVista();
 }
 

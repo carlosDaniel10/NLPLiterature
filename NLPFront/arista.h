@@ -19,6 +19,10 @@ public:
     double obtenerPeso() const;
     void fijarPeso(double peso);
 
+    // Sentimiento promedio acumulado en [-1, 1]; 0.0 si aun no hay datos.
+    double obtenerSentimiento() const;
+    void agregarSentimiento(double puntaje);
+
     bool operator==(const Arista &otra) const;
     bool operator!=(const Arista &otra) const;
 
@@ -26,6 +30,8 @@ private:
     std::string idOrigen;
     std::string idDestino;
     double peso;
+    double sumaSentimiento;
+    int cantidadSentimientos;
 };
 
 #endif // ARISTA_H

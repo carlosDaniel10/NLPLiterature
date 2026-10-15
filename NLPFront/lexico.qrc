@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>sentimientos_es.txt</file>
+    </qresource>
+</RCC>
