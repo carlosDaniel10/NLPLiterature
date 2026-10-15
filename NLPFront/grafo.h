@@ -48,6 +48,10 @@ public:
     // Devuelve false si algun nodo no existe.
     bool aumentarPeso(const std::string &idOrigen, const std::string &idDestino, double incremento = 1.0);
 
+    // Registra un puntaje de sentimiento [-1, 1] en la arista existente.
+    // Devuelve false si los nodos o la arista no existen.
+    bool registrarSentimiento(const std::string &idOrigen, const std::string &idDestino, double puntaje);
+
     bool esDireccionado() const;
     bool esPonderado() const;
 
