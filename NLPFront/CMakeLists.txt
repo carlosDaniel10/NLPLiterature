@@ -12,6 +12,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 
+find_package(Threads REQUIRED)
+
+# fastText (Meta): clasificador de texto supervisado. Se descarga una sola vez
+# al configurar; despues queda cacheado en el arbol de build. v0.9.2 necesita
+# dos parches (ver cmake/parchear_fasttext.cmake): un include para GCC 13 y
+# renombrar el main del CLI para que no choque con el de la aplicacion.
+include(FetchContent)
+FetchContent_Declare(fasttext
+        GIT_REPOSITORY https://github.com/facebookresearch/fastText.git
+        GIT_TAG v0.9.2
+        GIT_SHALLOW TRUE
+        PATCH_COMMAND ${CMAKE_COMMAND}
+            -DARCHIVO_ARGS=<SOURCE_DIR>/src/args.h
+            -DARCHIVO_MAIN=<SOURCE_DIR>/src/main.cc
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/parchear_fasttext.cmake
+)
+FetchContent_MakeAvailable(fasttext)
+
+# Solo se usa la libreria estatica; los demas objetivos no se compilan.
+set_target_properties(fasttext-shared fasttext-static_pic fasttext-bin PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
 set(TS_FILES NLPFront_es_CO.ts)
 
 set(PROJECT_SOURCES
@@ -29,8 +50,16 @@ set(PROJECT_SOURCES
         grafo.h
         dialogografo.cpp
         dialogografo.h
-        analizadorsentimientos.cpp
+        dialogoentrenar.cpp
+        dialogoentrenar.h
+        dialogoentrenar.ui
+        entrenadorfasttext.cpp
+        entrenadorfasttext.h
         analizadorsentimientos.h
+        analizadorlexico.cpp
+        analizadorlexico.h
+        analizadorfasttext.cpp
+        analizadorfasttext.h
         sentimientos_es.txt
         lexico.qrc
         ${TS_FILES}
@@ -64,7 +93,8 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(NLPFront PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_include_directories(NLPFront PRIVATE ${fasttext_SOURCE_DIR}/src)
+target_link_libraries(NLPFront PRIVATE Qt${QT_VERSION_MAJOR}::Widgets fasttext-static Threads::Threads)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

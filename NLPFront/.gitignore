@@ -80,3 +80,8 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+
+# Modelo fastText y datos de entrenamiento generados
+/sentimientos_modelo.bin
+/sentimientos_modelo.ftz
+/sentimientos_modelo.train.txt

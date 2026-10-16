@@ -2,8 +2,10 @@
 #include "./ui_mainwindow.h"
 
 #include "analizadorsentimientos.h"
+#include "dialogoentrenar.h"
 #include "dialogografo.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
@@ -23,24 +25,109 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , grafo(false, true)
     , dialogoGrafo(nullptr)
+    , dialogoEntrenar(nullptr)
+    , analizadorLexico()
+    , analizadorFastText()
+    , analizadorActivo(&analizadorLexico)
+    , rutaObraActual()
 {
     ui->setupUi(this);
-
-    QFile archivoLexico(QStringLiteral(":/sentimientos_es.txt"));
-
-    if (archivoLexico.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        analizador.cargarLexicoDesdeTexto(QString::fromUtf8(archivoLexico.readAll()).toStdString());
-    }
-    else
-    {
-        qWarning() << "No se pudo cargar el lexico de sentimientos (:/sentimientos_es.txt).";
-    }
+    cargarAnalizadores();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::cargarAnalizadores()
+{
+    QFile archivoLexico(QStringLiteral(":/sentimientos_es.txt"));
+
+    if (archivoLexico.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        analizadorLexico.cargarLexicoDesdeTexto(QString::fromUtf8(archivoLexico.readAll()).toStdString());
+    }
+    else
+    {
+        qWarning() << "No se pudo cargar el lexico de sentimientos (:/sentimientos_es.txt).";
+    }
+
+    // Busca el modelo de fastText junto al ejecutable o, en el arbol de
+    // desarrollo, en la carpeta fuente de NLPFront. Se prefiere el modelo
+    // cuantizado (.ftz) por su tamano; el .bin completo queda como respaldo.
+    const QString carpetaAplicacion = QCoreApplication::applicationDirPath();
+    const QStringList nombres = {
+        QStringLiteral("sentimientos_modelo.ftz"),
+        QStringLiteral("sentimientos_modelo.bin")
+    };
+    const QStringList ubicaciones = {
+        QStringLiteral(""),
+        QStringLiteral("/.."),
+        QStringLiteral("/../..")
+    };
+
+    for (const QString &nombre : nombres)
+    {
+        for (const QString &ubicacion : ubicaciones)
+        {
+            const QString ruta = carpetaAplicacion + ubicacion + QLatin1Char('/') + nombre;
+
+            if (QFileInfo::exists(ruta) && analizadorFastText.cargarModelo(ruta.toStdString()))
+            {
+                break;
+            }
+        }
+
+        if (analizadorFastText.estaDisponible())
+        {
+            break;
+        }
+    }
+
+    if (analizadorFastText.estaDisponible())
+    {
+        ui->comboAnalizador->setCurrentIndex(1);
+    }
+    else
+    {
+        ui->comboAnalizador->setCurrentIndex(0);
+    }
+
+    actualizarEstadoAnalizador();
+}
+
+void MainWindow::on_comboAnalizador_currentIndexChanged(int indice)
+{
+    if (indice == 1)
+    {
+        if (!analizadorFastText.estaDisponible())
+        {
+            ui->comboAnalizador->setCurrentIndex(0);
+            statusBar()->showMessage(tr("Modelo FastText no encontrado; se usa el analizador de lexico."));
+            return;
+        }
+
+        analizadorActivo = &analizadorFastText;
+    }
+    else
+    {
+        analizadorActivo = &analizadorLexico;
+    }
+
+    actualizarEstadoAnalizador();
+}
+
+void MainWindow::actualizarEstadoAnalizador()
+{
+    if (analizadorActivo == &analizadorFastText)
+    {
+        ui->etiquetaEstadoModelo->setText(tr("FastText activo"));
+    }
+    else
+    {
+        ui->etiquetaEstadoModelo->setText(tr("Lexico activo"));
+    }
 }
 
 void MainWindow::on_botonLeerXmlTei_clicked()
@@ -55,6 +142,8 @@ void MainWindow::on_botonLeerXmlTei_clicked()
     {
         return;
     }
+
+    rutaObraActual = ruta;
 
     QFile archivo(ruta);
 
@@ -105,6 +194,53 @@ void MainWindow::on_botonVerGrafo_clicked()
     dialogoGrafo->show();
     dialogoGrafo->raise();
     dialogoGrafo->activateWindow();
+}
+
+void MainWindow::on_botonReentrenarModelo_clicked()
+{
+    if (dialogoEntrenar == nullptr)
+    {
+        dialogoEntrenar = new DialogoEntrenar(this);
+        connect(dialogoEntrenar, &DialogoEntrenar::modeloEntrenado, this, &MainWindow::alModeloEntrenado);
+    }
+
+    dialogoEntrenar->show();
+    dialogoEntrenar->raise();
+    dialogoEntrenar->activateWindow();
+}
+
+void MainWindow::alModeloEntrenado(const QString &rutaModelo)
+{
+    const QByteArray rutaLocal = rutaModelo.toLocal8Bit();
+
+    if (!analizadorFastText.cargarModelo(std::string(rutaLocal.constData())))
+    {
+        QMessageBox::warning(this, tr("Reentrenar modelo"), tr("No se pudo cargar el modelo generado."));
+        return;
+    }
+
+    ui->comboAnalizador->setCurrentIndex(1);
+    actualizarEstadoAnalizador();
+    statusBar()->showMessage(tr("Modelo reentrenado y cargado."));
+
+    if (rutaObraActual.isEmpty())
+    {
+        return;
+    }
+
+    const QMessageBox::StandardButton respuesta = QMessageBox::question(
+        this,
+        tr("Reentrenar modelo"),
+        tr("El modelo quedo activo. Reanalizar la obra cargada con el nuevo modelo?"));
+
+    if (respuesta == QMessageBox::Yes)
+    {
+        grafo.limpiar();
+        cargarPersonajes(rutaObraActual);
+        cargarRelaciones(rutaObraActual);
+        cargarSentimientos(rutaObraActual);
+        mostrarPersonajes();
+    }
 }
 
 bool MainWindow::extraerTextoTei(QXmlStreamReader &lector, QString &texto, QString &error)
@@ -437,7 +573,7 @@ void MainWindow::cargarSentimientos(const QString &ruta)
             {
                 const QString quien = lector.attributes().value(QLatin1String("who")).toString();
                 const QString textoParlamento = lector.readElementText(QXmlStreamReader::IncludeChildElements).trimmed();
-                const double puntaje = analizador.analizar(textoParlamento.toStdString());
+                const double puntaje = analizadorActivo->analizar(textoParlamento.toStdString());
                 const QStringList ids = quien.split(QLatin1Char(' '), Qt::SkipEmptyParts);
 
                 for (const QString &token : ids)
@@ -537,7 +673,7 @@ void MainWindow::cargarSentimientos(const QString &ruta)
                 }
                 else if (personas.size() >= 2)
                 {
-                    const double puntaje = analizador.analizar(textoUnidad.back());
+                    const double puntaje = analizadorActivo->analizar(textoUnidad.back());
 
                     for (std::size_t i = 0; i < personas.size(); ++i)
                     {

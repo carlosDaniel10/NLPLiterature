@@ -32,6 +32,34 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="botonReentrenarModelo">
+        <property name="text">
+         <string>Reentrenar modelo</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboAnalizador">
+        <item>
+         <property name="text">
+          <string>Sentimiento: lexico</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Sentimiento: FastText</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="etiquetaEstadoModelo">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="espaciadorBotones">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

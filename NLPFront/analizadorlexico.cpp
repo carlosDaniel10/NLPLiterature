@@ -1,4 +1,4 @@
-#include "analizadorsentimientos.h"
+#include "analizadorlexico.h"
 
 #include <cctype>
 #include <fstream>
@@ -23,12 +23,12 @@ std::string recortar(const std::string &texto)
 
 } // namespace
 
-AnalizadorSentimientos::AnalizadorSentimientos()
+AnalizadorLexico::AnalizadorLexico()
     : lexico()
 {
 }
 
-bool AnalizadorSentimientos::cargarLexico(const std::string &ruta)
+bool AnalizadorLexico::cargarLexico(const std::string &ruta)
 {
     std::ifstream archivo(ruta);
 
@@ -43,7 +43,7 @@ bool AnalizadorSentimientos::cargarLexico(const std::string &ruta)
     return true;
 }
 
-void AnalizadorSentimientos::cargarLexicoDesdeTexto(const std::string &contenido)
+void AnalizadorLexico::cargarLexicoDesdeTexto(const std::string &contenido)
 {
     std::istringstream flujo(contenido);
     std::string linea;
@@ -68,7 +68,7 @@ void AnalizadorSentimientos::cargarLexicoDesdeTexto(const std::string &contenido
     }
 }
 
-double AnalizadorSentimientos::analizar(const std::string &texto) const
+double AnalizadorLexico::analizar(const std::string &texto)
 {
     double suma = 0.0;
     int totalPalabras = 0;
@@ -133,12 +133,12 @@ double AnalizadorSentimientos::analizar(const std::string &texto) const
     return puntaje;
 }
 
-std::size_t AnalizadorSentimientos::cantidadPalabras() const
+std::size_t AnalizadorLexico::cantidadPalabras() const
 {
     return lexico.size();
 }
 
-void AnalizadorSentimientos::procesarPalabra(const std::string &palabra, int &ventanaNegacion, double &suma, int &totalPalabras) const
+void AnalizadorLexico::procesarPalabra(const std::string &palabra, int &ventanaNegacion, double &suma, int &totalPalabras) const
 {
     const auto it = lexico.find(palabra);
 
@@ -165,7 +165,7 @@ void AnalizadorSentimientos::procesarPalabra(const std::string &palabra, int &ve
     }
 }
 
-bool AnalizadorSentimientos::esNegacion(const std::string &palabra) const
+bool AnalizadorLexico::esNegacion(const std::string &palabra) const
 {
     static const std::vector<std::string> palabras =
         {"no", "nunca", "sin", "ni", "tampoco", "jamas", "nada", "nadie", "ningun", "ninguna", "ninguno"};
